@@ -1,10 +1,11 @@
+
 #include"stdio.h"
 #include"conio.h"
 #include "iostream"
 #include"malloc.h"
 
 using namespace std;
-#define MAX 6 //suponha que seja sempre par
+#define MAX 4 //suponha que seja sempre par
 
 
 
@@ -58,7 +59,7 @@ class lista //classe com métodos para dados e ponteiros
 			return pos;
 		}
 
-		int insere(T dado)
+		int insereOrdenado(T dado)
 		{
 			int pos = 0;
 			no_lista<T> *novo = new no_lista<T>;//cria novo nó
@@ -87,16 +88,35 @@ class lista //classe com métodos para dados e ponteiros
 			return pos;
 		}
 
-		void insere(T dado, int pos)
+		void insereFim(T dado)
 		{
-			no_lista<T> novo = new no_lista<T>;//cria novo nó
-			novo.dado = dado;
-			novo.prox = NULL;
+			no_lista<T> *novo = new no_lista<T>;//cria novo nó
+			novo->dado = dado;
+			novo->prox = NULL;
+
+			no_lista<T> *p = inicio;
+
+			if(inicio == NULL)
+				inicio = novo;
+			else
+			{
+				while(p->prox != NULL)
+					p = p->prox;
+				p->prox = novo;
+			}
+
+		}
+
+		void inserePosicao(T dado, int pos, bool substitui)
+		{
+			no_lista<T> *novo = new no_lista<T>;//cria novo nó
+			novo->dado = dado;
+			novo->prox = NULL;
 
 			no_lista<T> *p = inicio;
 			no_lista<T> *ant;
 
-			for(int i=0; p!=NULL && i <=pos; i++)
+			for(int i=0; p!=NULL && i < pos; i++)
 			{
 				ant = p;
 				p=p->prox;
@@ -104,13 +124,26 @@ class lista //classe com métodos para dados e ponteiros
 
 			if(p == inicio)
 			{
-				novo->prox = inicio;
-				inicio = novo;
+				if(substitui)	
+				{
+					if(inicio != NULL)
+						novo->prox = inicio->prox;
+					delete(inicio);
+				}
+				else				
+					novo->prox = inicio;
+				inicio = novo;				
 			}
 			else
 			{
-				ant->prox = &novo;
-				novo.prox = p;
+				ant->prox = novo;
+				if(substitui)
+				{
+					novo->prox = p->prox;
+					delete(p);
+				}
+				else
+					novo->prox = p;
 			}
 		}
 
@@ -139,83 +172,171 @@ class Arvore
 	public:
 		Arvore()
 		{
-			cont = 0;	
+			cont = 0;
 			//ptr.insere(NULL);
 		}
 
 		Arvore* divide() //divide a arvore em duas partes e gera um novo nó com o elemento medio
 		{
-			Arvore dir;
+			Arvore *dir = new Arvore;
+			Arvore *esq = new Arvore;
 			no_lista<int> *p = chaves.getInicio();
 			no_lista<int> *ant;
 
-			no_lista<Arvore*> *pArv = ptr.getInicio();//começa no segundo
-			no_lista<Arvore*> *antArv;
+			no_lista<Arvore*> *pArv = NULL;
+			no_lista<Arvore*> *antArv =  ptr.getInicio();
+			if(antArv != NULL) //não é folha
+				pArv = antArv->prox;//começa no segundo			
+			
 			//supondo que pos sera sempre menor que o tamanho, ja que é a metade
-			int pos = MAX/2 - 1;
-			for(int i=0;  i<= pos; i++)
+			int pos = MAX/2; //Não adiciono 1 pois estou começando do 0
+			for(int i=0;  i< pos; i++)//anda ate a posição setada
 			{
 				ant = p;
 				p=p->prox;
 
-				antArv = pArv;
-				pArv = pArv->prox;
+				if(pArv!=NULL)//Os ponteiros sempre andam uma posição na frente das chaves, pois há um a mais
+				{
+					antArv = pArv;
+					pArv = pArv->prox;
+				}
 			}
 
-			int ind = MAX/2 + 1; //metade da lista
 
 			//poderia verificar se é o início, mas assumindo que será o tamanho médio do nó não farei essa verificação
-			ant->prox = NULL;
-			dir.chaves.setInicio(p->prox); //Seta novo inicio da lista
-			p->prox = NULL; //será um novo nó
-			cont = pos; 
-			dir.cont = MAX - pos - 1; //-1 pois o um nó subirá para o pai
 			
-			antArv->prox = NULL;
-			pArv->prox = NULL;
-			dir.ptr.setInicio(pArv->prox->prox); //lista com tamanho minimo maior que 4, logo nao precisa validar
-			pArv->prox->prox = NULL;
-	
-			Arvore noArvore;
-			noArvore.chaves.setInicio(p);
-			noArvore.ptr.setInicio(pArv);		
 
-			return &noArvore;
+			ant->prox = NULL; //finliza a metade da lista das chaves
+			esq->chaves.setInicio(chaves.getInicio());
+
+			if(antArv != NULL)//não é folha
+				antArv->prox = NULL; //finliza a metade da lista dos ponteiros
+			esq->ptr.setInicio(ptr.getInicio());
+			esq->cont = pos;	
+
+			dir->chaves.setInicio(p->prox); //Seta novo inicio da lista
+			dir->ptr.setInicio(pArv);//seta inicio da lista dos ponteiros
+			dir->cont = MAX - pos; //sempre será a metade, mas mantive o cálculo
+			
+
+			cont = 1; //resta o nó que subiu
+			p->prox = NULL; //será um novo nó
+			chaves.setInicio(p);
+
+			//setar o inicio
+			ptr.setInicio(NULL);
+			ptr.insereFim(esq);
+			ptr.insereFim(dir); //pode ser otimizado para inserir os dois.
+
+			return this;
 		}
 
 		Arvore* insere(int dado)//se for inserir no pai traz as chaves junto
 		{
-			Arvore *no = NULL;
-			cont++;
-			int pos = chaves.insere(dado);
-			//folha nao precisa de ponteiro para arvores
+			if(ptr.getInicio() != NULL) //não é folha
+			{
+				no_lista<int> *p = chaves.getInicio();
+				no_lista<Arvore*> *pArv = ptr.getInicio();
+			
+				while(p!=NULL && dado > p->dado)
+				{
+					p = p->prox; 
+					pArv = pArv->prox;
+				}
 
-			if(cont > MAX)							
-				 no = divide();
+				Arvore *novo = (pArv->dado)->insere(dado);//pAv->dado é o ponteiro para objeto Arvore
+				if( novo != NULL) // Se dividiu
+				{
+					int pos = chaves.insereNo(novo->chaves.getInicio()); //ha apenas uma chave nesse caso
+					cont++;
+					no_lista<Arvore *> *aux = novo->ptr.getInicio();
+					ptr.inserePosicao(aux->dado, pos, true);
+					ptr.inserePosicao(aux->prox->dado, pos + 1, false);			
 
-			return no;
+					if(cont > MAX)							
+						return divide();
+					else
+						return NULL;
+				}
+			}
+			else
+			{	
+				cont++;
+				int pos = chaves.insereOrdenado(dado);
+				//folha nao precisa de ponteiro para arvores
+	
+				if(cont > MAX)							
+					return divide();
+				else
+					return NULL;
+			}
 		}
 
-		void imprime()
+		void setCont(int c)
+		{
+			cont = c;
+		}
+
+		void imprime(int n)
 		{
 			chaves.imprime();
+			no_lista<Arvore*> *p = ptr.getInicio();
+			cout<<"\n";
+			while(p != NULL)
+			{
+				for(int i=0;i<n;i++)//identa, deixa a complexidade exponencial, mas nao é uma operação custosa
+					cout << "   ";
+				(p->dado)->imprime(n+1);
+				p=p->prox;
+			}
 		}
 };
 
 int main()
 {
 	int op = 0;
-	Arvore arv;	
+	int val;
+	Arvore *raiz; //raiz	
+	Arvore arv;
 	
+		arv.insere(1);
+		arv.insere(12);
+		arv.insere(8);
+		arv.insere(2);
+		arv.insere(25);
+		arv.insere(6);
+		arv.insere(14);
+		arv.insere(28);
+		arv.insere(17);
+		arv.insere(7);
+		arv.insere(52);
+		arv.insere(16);
+		arv.insere(48);
+		arv.insere(68);
+		arv.insere(3);
+		arv.insere(26);
+		arv.insere(29);
+		arv.insere(53);
+		arv.insere(55);
+		arv.insere(45);
 	do
 	{
-		cout<<"Digite o valor: ";
-		cin >> op;
-		if(op != 0)
-			arv.insere(op);
-		else
-			arv.imprime();
+		cout << "\n1- Inserir \n2- Imprimir \n0 -Sair \n";
+		cin>>op;
+		switch(op)
+		{
+			case 1:
+				cout<<"Digite o valor: ";
+				cin >> val;
+				arv.insere(val);
+				break;
+			case 2:
+				cout<<"\n";
+				arv.imprime(1);
+				break;			
+		}
 	}while(op!=0);
 
 	getch();
+	return 0;
 }
