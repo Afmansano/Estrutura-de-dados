@@ -316,7 +316,7 @@ class Arvore
 			cout<<"\n";
 			while(p != NULL)
 			{
-				for(int i=0;i<n;i++)//identa, deixa a complexidade exponencial, mas nao é uma operação custosa
+				for(int i=0;i<n;i++)//identa, deixa a complexidade quadrática, mas nao é uma operação custosa
 					cout << "   ";
 				(p->dado)->imprime(n+1);
 				p=p->prox;
@@ -331,7 +331,7 @@ int main()
 	Arvore *raiz; //raiz	
 	Arvore arv;
 	
-		arv.insere(1);
+		/*arv.insere(1);
 		arv.insere(12);
 		arv.insere(8);
 		arv.insere(2);
@@ -350,7 +350,7 @@ int main()
 		arv.insere(29);
 		arv.insere(53);
 		arv.insere(55);
-		arv.insere(45);
+		arv.insere(45);*/
 	do
 	{
 		cout << "\n1- Inserir \n2- Imprimir \n3- Buscar \n0- Sair \n";
