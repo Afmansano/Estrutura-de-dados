@@ -1,4 +1,5 @@
-
+//Alex Fernandes Mansano
+//Lucas C. Ferreira 
 #include"stdio.h"
 #include"conio.h"
 #include "iostream"
@@ -169,12 +170,6 @@ class Arvore
 		int cont;
 		lista<int> chaves;
 		lista<Arvore*> ptr; //lista de ponteiros para os nos 
-	public:
-		Arvore()
-		{
-			cont = 0;
-			//ptr.insere(NULL);
-		}
 
 		Arvore* divide() //divide a arvore em duas partes e gera um novo nó com o elemento medio
 		{
@@ -231,6 +226,13 @@ class Arvore
 			return this;
 		}
 
+	public:
+		Arvore()
+		{
+			cont = 0;
+			//ptr.insere(NULL);
+		}		
+
 		Arvore* insere(int dado)//se for inserir no pai traz as chaves junto
 		{
 			if(ptr.getInicio() != NULL) //não é folha
@@ -276,6 +278,36 @@ class Arvore
 		{
 			cont = c;
 		}
+		
+		bool busca(int dado) //pode-se também retornar o endereço do elemento
+		{
+			no_lista<Arvore *> *pArv = ptr.getInicio();
+			no_lista<int> *p = chaves.getInicio();
+
+			while(p!=NULL && p->dado < dado)
+			{
+				p=p->prox;
+				if(pArv != NULL)//não é folha
+					pArv = pArv->prox;
+			}
+
+			if(p!= NULL) //o ideal seria pensar em uma solução com menos if's, diminuindo desvios no código, mas não houve tempo
+			{
+				if(p->dado == dado)
+					return true;
+				else //p->dado é maior
+				{
+					if(pArv != NULL)//não é folha
+						return (pArv->dado)->busca(dado);
+					else 
+						return false; //é folha, procurou tudo
+				}
+			}
+			if(pArv != NULL)//não é folha
+				return (pArv->dado)->busca(dado);
+			else 
+				return false; //é folha, procurou tudo
+		}
 
 		void imprime(int n)
 		{
@@ -292,7 +324,7 @@ class Arvore
 		}
 };
 
-int main()
+int _tmain(int argc, _TCHAR* argv[])
 {
 	int op = 0;
 	int val;
@@ -321,7 +353,7 @@ int main()
 		arv.insere(45);
 	do
 	{
-		cout << "\n1- Inserir \n2- Imprimir \n0 -Sair \n";
+		cout << "\n1- Inserir \n2- Imprimir \n3- Buscar \n0- Sair \n";
 		cin>>op;
 		switch(op)
 		{
@@ -334,6 +366,14 @@ int main()
 				cout<<"\n";
 				arv.imprime(1);
 				break;			
+			case 3:
+				cout<<"Digite o valor: ";
+				cin >> val;
+				if(arv.busca(val))
+					cout << "Elemento encontrado!";
+				else
+					cout << "Elemento não encontrado";
+				break;
 		}
 	}while(op!=0);
 
