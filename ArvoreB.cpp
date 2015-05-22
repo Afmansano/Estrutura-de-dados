@@ -324,7 +324,7 @@ class Arvore
 		}
 };
 
-int _tmain(int argc, _TCHAR* argv[])
+int main()
 {
 	int op = 0;
 	int val;
@@ -378,5 +378,4 @@ int _tmain(int argc, _TCHAR* argv[])
 	}while(op!=0);
 
 	getch();
-	return 0;
 }
